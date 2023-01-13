@@ -11,7 +11,9 @@ using namespace std;
 #define PORT 8080
 #define PRICE_LIST "product_price.txt"
 
-int getProductCode(char *buffer)
+int product_code_g = -1, product_quantity_g = -1;
+
+int getProductCodeAndProductQuantity(char *buffer)
 {
     char *pch;
     int count = 0;
@@ -21,30 +23,95 @@ int getProductCode(char *buffer)
         pch = strtok(NULL, " ");
         count++;
         if (count == 1)
-            return stoi(pch);
+            product_code_g = stoi(pch);
+        if (count == 2)
+            product_quantity_g = stoi(pch);
     }
 
     return 0;
 }
 
-int getProductQuantity(char *buffer)
+// int getProductQuantity(char *buffer)
+// {
+//     char *pch;
+//     int count = 0;
+//     cout << "product quantity buffer is " << buffer << "\n";
+//     pch = strtok(buffer, " ");
+//     while (pch != NULL)
+//     {
+//         pch = strtok(NULL, " ");
+//         count++;
+//         if (count == 2)
+//             return stoi(pch);
+//     }
+//     return 0;
+// }
+
+int checkPrice(char *price_line, int product_code)
 {
     char *pch;
+    char *current_product;
     int count = 0;
-    pch = strtok(buffer, " ");
-    while (pch != NULL)
+    // cout << "kooooiii\n";
+    pch = strtok(price_line, " ");
+    // cout << "ho ho \n";
+    if (stoi(pch) == product_code)
     {
         pch = strtok(NULL, " ");
-        count++;
-        if (count == 2)
-            return stoi(pch);
+        pch = strtok(NULL, " ");
+        return stoi(pch);
     }
+
+    return -1;
 }
 
 int getProductPrice(int product_code)
 {
     ifstream file;
-    file.open("product_price.txt");
+    file.open(PRICE_LIST);
+
+    if (!file.is_open())
+    {
+        cout << "Unable to open the file." << endl;
+        return 0;
+    }
+
+    string line;
+    while (getline(file, line) && !line.empty())
+    {
+        cout << "line is " << line << "\n";
+        if (line.length() > 0)
+        {
+            int price = checkPrice((char *)line.c_str(), product_code);
+            if (price != -1)
+                return price;
+        }
+    }
+
+    file.close();
+
+    return 0;
+}
+
+string checkName(string line, int product_code)
+{
+    char *pch;
+    char *current_product;
+    int count = 0;
+    pch = strtok((char *)line.c_str(), " ");
+    if (stoi(pch) == product_code)
+    {
+        pch = strtok(NULL, " ");
+        return pch;
+    }
+
+    return "\0";
+}
+
+string getProductName(int product_code)
+{
+    ifstream file;
+    file.open(PRICE_LIST);
 
     if (!file.is_open())
     {
@@ -55,10 +122,14 @@ int getProductPrice(int product_code)
     string line;
     while (getline(file, line))
     {
-        cout << line << endl;
+        string name = checkName((char *)line.c_str(), product_code);
+        if (strcmp(name.c_str(), "\0") != 0)
+            return name;
     }
 
     file.close();
+
+    return 0;
 }
 
 int main(int argc, char const *argv[])
@@ -68,7 +139,7 @@ int main(int argc, char const *argv[])
     struct sockaddr_in address;
     int addrlen = sizeof(address);
 
-    string content = "adwaith's server is up and running!!!";
+    string content = "";
 
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
@@ -104,22 +175,41 @@ int main(int argc, char const *argv[])
         }
         else
         {
+            float total_price = 0;
+
             while (1)
             {
                 char buffer[30000] = {0};
-                char product_code[3];
+                int product_code, product_quantity, product_price;
+                string product_name;
                 char *pch;
                 valread = read(new_socket, buffer, 30000);
                 printf("-----------------Request--------------------");
-                printf("\n quantity in buffer is : %s\n", buffer);
+                printf("\n content in buffer is : %s\n", buffer);
                 if (buffer[0] == '0')
                 {
-                    cout << "Product code is : " << getProductCode(buffer) << "\n";
-                    cout << "Product quantity is : " << getProductQuantity(buffer) << "\n";
+                    getProductCodeAndProductQuantity(buffer);
+                    product_code = product_code_g;
+                    product_quantity = product_quantity_g;
+                    product_price = getProductPrice(product_code);
+                    product_name = getProductName(product_code);
+                    cout << "Product price is : " << product_price << "\n";
+                    cout << "Product quantity is : " << product_quantity << "\n";
+                    total_price += product_price * product_quantity;
+                    cout << "Total price is : " << total_price << "\n";
+                    content = "0 product price: " + to_string(product_price) + " product name: " + product_name;
+                    write(new_socket, content.c_str(), strlen(content.c_str()));
+                }
+
+                if (buffer[0] == '1')
+                {
+                    content = "0 total price: " + to_string(total_price);
+                    write(new_socket, content.c_str(), strlen(content.c_str()));
+                    close(new_socket);
+                    break;
                 }
 
                 printf("--------------------------------------------\n");
-                write(new_socket, content.c_str(), strlen(content.c_str()));
             }
         }
 

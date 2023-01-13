@@ -125,9 +125,11 @@ int main(int argc, char const *argv[])
                 if (request_type == 1)
                 {
                     cout << "\n Sending close request to the server!! \n";
-                    send(sock, "0", 1, 0);
+                    send(sock, "1", 1, 0);
 
                     read(sock, buffer, 1024);
+
+                    cout << "\nResponse from server: " << buffer << "\n";
 
                     break;
                 }

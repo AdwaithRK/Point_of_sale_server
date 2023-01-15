@@ -2,50 +2,50 @@
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>
+#include <string>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 using namespace std;
 #define PORT 8080
 #define PRICE_LIST "product_price.txt"
 
+using namespace std;
+
 int product_code_g = -1, product_quantity_g = -1;
 
-int getProductCodeAndProductQuantity(char *buffer)
+int getProductCode(char *buffer)
 {
-    char *pch;
-    int count = 0;
-    pch = strtok(buffer, " ");
-    while (pch != NULL)
+    istringstream ss(buffer);
+    string product_id;
+
+    for (int i = 0; i < 2; i++)
     {
-        pch = strtok(NULL, " ");
-        count++;
-        if (count == 1)
-            product_code_g = stoi(pch);
-        if (count == 2)
-            product_quantity_g = stoi(pch);
+        ss >> product_id;
     }
 
-    return 0;
+    
+    return stoi(product_id);
 }
 
-// int getProductQuantity(char *buffer)
-// {
-//     char *pch;
-//     int count = 0;
-//     cout << "product quantity buffer is " << buffer << "\n";
-//     pch = strtok(buffer, " ");
-//     while (pch != NULL)
-//     {
-//         pch = strtok(NULL, " ");
-//         count++;
-//         if (count == 2)
-//             return stoi(pch);
-//     }
-//     return 0;
-// }
+int getProductQuantity(char *buffer)
+{
+    istringstream ss(buffer);
+    string product_quantity;
+
+    for (int i = 0; i < 3; i++)
+    {
+        ss >> product_quantity;
+    }
+    
+    
+    return stoi(product_quantity);
+}
+
+
 
 int checkPrice(char *price_line, int product_code)
 {

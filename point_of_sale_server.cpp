@@ -15,8 +15,6 @@ using namespace std;
 
 using namespace std;
 
-int product_code_g = -1, product_quantity_g = -1;
-
 int getProductCode(char *buffer)
 {
     istringstream ss(buffer);
@@ -27,7 +25,6 @@ int getProductCode(char *buffer)
         ss >> product_id;
     }
 
-    
     return stoi(product_id);
 }
 
@@ -40,26 +37,29 @@ int getProductQuantity(char *buffer)
     {
         ss >> product_quantity;
     }
-    
-    
+
     return stoi(product_quantity);
 }
 
-
-
 int checkPrice(char *price_line, int product_code)
 {
-    char *pch;
-    char *current_product;
-    int count = 0;
-    // cout << "kooooiii\n";
-    pch = strtok(price_line, " ");
-    // cout << "ho ho \n";
-    if (stoi(pch) == product_code)
+    istringstream ss(price_line);
+    string product_code_in_line;
+    string price;
+
+    for (int i = 0; i < 1; i++)
     {
-        pch = strtok(NULL, " ");
-        pch = strtok(NULL, " ");
-        return stoi(pch);
+        ss >> product_code_in_line;
+    }
+
+    if (stoi(product_code_in_line) == product_code)
+    {
+
+        for (int i = 0; i < 2; i++)
+        {
+            ss >> price;
+        }
+        return stoi(price);
     }
 
     return -1;
@@ -95,14 +95,22 @@ int getProductPrice(int product_code)
 
 string checkName(string line, int product_code)
 {
-    char *pch;
-    char *current_product;
-    int count = 0;
-    pch = strtok((char *)line.c_str(), " ");
-    if (stoi(pch) == product_code)
+    istringstream ss(line);
+    string product_code_in_line;
+    string name;
+
+    for (int i = 0; i < 1; i++)
     {
-        pch = strtok(NULL, " ");
-        return pch;
+        ss >> product_code_in_line;
+    }
+
+    if (stoi(product_code_in_line) == product_code)
+    {
+        for (int i = 0; i < 1; i++)
+        {
+            ss >> name;
+        }
+        return name;
     }
 
     return "\0";
@@ -188,9 +196,10 @@ int main(int argc, char const *argv[])
                 printf("\n content in buffer is : %s\n", buffer);
                 if (buffer[0] == '0')
                 {
-                    getProductCodeAndProductQuantity(buffer);
-                    product_code = product_code_g;
-                    product_quantity = product_quantity_g;
+                    product_code = getProductCode(buffer);
+                    product_quantity = getProductQuantity(buffer);
+                    // extraction from client message is done
+
                     product_price = getProductPrice(product_code);
                     product_name = getProductName(product_code);
                     cout << "Product price is : " << product_price << "\n";

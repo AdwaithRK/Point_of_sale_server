@@ -9,6 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <bits/stdc++.h>
 using namespace std;
 #define PORT 8080
 #define PRICE_LIST "product_price.txt"
@@ -140,6 +141,34 @@ string getProductName(int product_code)
     return 0;
 }
 
+vector<int> cacheValidProductId()
+{
+    ifstream file;
+    file.open(PRICE_LIST);
+    vector<int> cachedPriceList;
+
+    if (!file.is_open())
+    {
+        cout << "Unable to open the file." << endl;
+        return cachedPriceList;
+    }
+
+    string line;
+    while (getline(file, line))
+    {
+        istringstream ss(line);
+        string product_code_in_line;
+
+        ss >> product_code_in_line;
+
+        cachedPriceList.push_back(stoi(product_code_in_line));
+    }
+
+    file.close();
+
+    return cachedPriceList;
+}
+
 int main(int argc, char const *argv[])
 {
     int server_fd, new_socket;
@@ -184,6 +213,7 @@ int main(int argc, char const *argv[])
         else
         {
             float total_price = 0;
+            vector<int> cached_valid_ids = cacheValidProductId();
 
             while (1)
             {
@@ -198,8 +228,13 @@ int main(int argc, char const *argv[])
                 {
                     product_code = getProductCode(buffer);
                     product_quantity = getProductQuantity(buffer);
-                    // extraction from client message is done
-
+                    if (find(cached_valid_ids.begin(), cached_valid_ids.end(), product_code) == cached_valid_ids.end())
+                    {
+                        content = "1 product_code: " + to_string(product_price) + " NOT_FOUND!!";
+                        write(new_socket, content.c_str(), strlen(content.c_str()));
+                    }
+                    else
+                    {
                     product_price = getProductPrice(product_code);
                     product_name = getProductName(product_code);
                     cout << "Product price is : " << product_price << "\n";
@@ -208,6 +243,8 @@ int main(int argc, char const *argv[])
                     cout << "Total price is : " << total_price << "\n";
                     content = "0 product price: " + to_string(product_price) + " product name: " + product_name;
                     write(new_socket, content.c_str(), strlen(content.c_str()));
+                    }
+                    // extraction from client message is done
                 }
 
                 if (buffer[0] == '1')

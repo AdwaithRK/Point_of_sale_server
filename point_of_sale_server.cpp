@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <iostream>
+#include <signal.h>
 #include <fstream>
 #include <sstream>
 #include <bits/stdc++.h>
@@ -182,8 +183,8 @@ void serviceRequest(int new_socket)
         string product_name, content;
         char *pch;
         valread = read(new_socket, buffer, 30000);
-        printf("-----------------Request--------------------");
-        printf("\n content in buffer is : %s\n", buffer);
+        cout << "\n-----------------Request--------------------\n";
+        // printf("\n content in buffer is : %s\n", buffer);
         if (buffer[0] == '0')
         {
             product_code = getProductCode(buffer);
@@ -215,13 +216,27 @@ void serviceRequest(int new_socket)
             break;
         }
 
-        printf("--------------------------------------------\n");
+        cout << "\n--------------------------------------------\n";
     }
+}
+
+int server_fd, new_socket;
+
+void signal_handler(int sig)
+{
+    char msg[100];
+
+    close(server_fd);
+    fputs("\nServer terminating!..", stdout);
+
+    sprintf(msg, "0 Server terminated!\n");
+    send(new_socket, msg, 100, 0);
+
+    exit(0);
 }
 
 int main(int argc, char const *argv[])
 {
-    int server_fd, new_socket;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
 
@@ -251,6 +266,9 @@ int main(int argc, char const *argv[])
         perror("In listen");
         exit(EXIT_FAILURE);
     }
+
+    signal(SIGINT, signal_handler);
+
     while (1)
     {
         printf("\n+++++++ Waiting for new connection ++++++++\n\n");
@@ -267,7 +285,8 @@ int main(int argc, char const *argv[])
                 printf("\nRequest Serviced with child process %d\n", getpid());
                 serviceRequest(new_socket);
                 close(new_socket); //
-                exit(0);           // child exiting after servicing the request
+                printf("\nChild process %d is exiting\n", getpid());
+                exit(0); // child exiting after servicing the request
             }
         }
 

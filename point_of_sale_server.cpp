@@ -169,10 +169,59 @@ vector<int> cacheValidProductId()
     return cachedPriceList;
 }
 
+void serviceRequest(int new_socket)
+{
+    float total_price = 0;
+    vector<int> cached_valid_ids = cacheValidProductId();
+    long valread;
+
+    while (1)
+    {
+        char buffer[30000] = {0};
+        int product_code, product_quantity, product_price;
+        string product_name, content;
+        char *pch;
+        valread = read(new_socket, buffer, 30000);
+        printf("-----------------Request--------------------");
+        printf("\n content in buffer is : %s\n", buffer);
+        if (buffer[0] == '0')
+        {
+            product_code = getProductCode(buffer);
+            product_quantity = getProductQuantity(buffer);
+            if (find(cached_valid_ids.begin(), cached_valid_ids.end(), product_code) == cached_valid_ids.end())
+            {
+                content = "1 product_code: " + to_string(product_price) + " NOT_FOUND!!";
+                write(new_socket, content.c_str(), strlen(content.c_str()));
+            }
+            else
+            {
+                product_price = getProductPrice(product_code);
+                product_name = getProductName(product_code);
+                cout << "Product price is : " << product_price << "\n";
+                cout << "Product quantity is : " << product_quantity << "\n";
+                total_price += product_price * product_quantity;
+                cout << "Total price is : " << total_price << "\n";
+                content = "0 product price: " + to_string(product_price) + " product name: " + product_name;
+                write(new_socket, content.c_str(), strlen(content.c_str()));
+            }
+            // extraction from client message is done
+        }
+
+        if (buffer[0] == '1')
+        {
+            content = "0 total price: " + to_string(total_price);
+            write(new_socket, content.c_str(), strlen(content.c_str()));
+            close(new_socket);
+            break;
+        }
+
+        printf("--------------------------------------------\n");
+    }
+}
+
 int main(int argc, char const *argv[])
 {
     int server_fd, new_socket;
-    long valread;
     struct sockaddr_in address;
     int addrlen = sizeof(address);
 
@@ -212,55 +261,17 @@ int main(int argc, char const *argv[])
         }
         else
         {
-            float total_price = 0;
-            vector<int> cached_valid_ids = cacheValidProductId();
-
-            while (1)
+            int childpid;
+            if ((childpid = fork()) == 0)
             {
-                char buffer[30000] = {0};
-                int product_code, product_quantity, product_price;
-                string product_name;
-                char *pch;
-                valread = read(new_socket, buffer, 30000);
-                printf("-----------------Request--------------------");
-                printf("\n content in buffer is : %s\n", buffer);
-                if (buffer[0] == '0')
-                {
-                    product_code = getProductCode(buffer);
-                    product_quantity = getProductQuantity(buffer);
-                    if (find(cached_valid_ids.begin(), cached_valid_ids.end(), product_code) == cached_valid_ids.end())
-                    {
-                        content = "1 product_code: " + to_string(product_price) + " NOT_FOUND!!";
-                        write(new_socket, content.c_str(), strlen(content.c_str()));
-                    }
-                    else
-                    {
-                    product_price = getProductPrice(product_code);
-                    product_name = getProductName(product_code);
-                    cout << "Product price is : " << product_price << "\n";
-                    cout << "Product quantity is : " << product_quantity << "\n";
-                    total_price += product_price * product_quantity;
-                    cout << "Total price is : " << total_price << "\n";
-                    content = "0 product price: " + to_string(product_price) + " product name: " + product_name;
-                    write(new_socket, content.c_str(), strlen(content.c_str()));
-                    }
-                    // extraction from client message is done
-                }
-
-                if (buffer[0] == '1')
-                {
-                    content = "0 total price: " + to_string(total_price);
-                    write(new_socket, content.c_str(), strlen(content.c_str()));
-                    close(new_socket);
-                    break;
-                }
-
-                printf("--------------------------------------------\n");
+                printf("\nRequest Serviced with child process %d\n", getpid());
+                serviceRequest(new_socket);
+                close(new_socket); //
+                exit(0);           // child exiting after servicing the request
             }
         }
 
-        // get_header(buffer);
-        // close(new_socket);
+        close(new_socket);
     }
 
     // closing the listening socket

@@ -12,7 +12,6 @@
 #include <sstream>
 #include <bits/stdc++.h>
 using namespace std;
-#define PORT 8080
 #define PRICE_LIST "product_price.txt"
 
 using namespace std;
@@ -182,6 +181,7 @@ void serviceRequest(int new_socket)
         int product_code, product_quantity, product_price;
         string product_name, content;
         char *pch;
+        memset(buffer, '\0', sizeof(buffer));
         valread = read(new_socket, buffer, 30000);
         cout << "\n-----------------Request--------------------\n";
         // printf("\n content in buffer is : %s\n", buffer);
@@ -239,8 +239,15 @@ int main(int argc, char const *argv[])
 {
     struct sockaddr_in address;
     int addrlen = sizeof(address);
+    int port;
 
     string content = "";
+
+    if(argc < 2){
+        printf("Not enough arguments");
+    }
+
+    port = atoi(argv[1]);
 
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
@@ -251,7 +258,7 @@ int main(int argc, char const *argv[])
 
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(PORT);
+    address.sin_port = htons(port);
 
     memset(address.sin_zero, '\0', sizeof address.sin_zero);
 

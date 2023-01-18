@@ -7,8 +7,22 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <iostream>
+#include <signal.h>
+
 using namespace std;
-#define PORT 8080
+
+int sock;
+
+void signal_handler(int sig){
+    char msg[100];
+
+    fputs("\nClient terminating!..", stdout);
+
+    sprintf(msg, "-256");
+    send(sock, msg, 100, 0);
+    close(sock);
+    exit(0);
+}
 
 int main(int argc, char const *argv[])
 {
@@ -54,18 +68,29 @@ int main(int argc, char const *argv[])
 
     int input_response;
 
-    int sock = 0, valread, client_fd;
+    int valread, client_fd, port;
     struct sockaddr_in serv_addr;
     // char *hello = "Hello from client";
     char buffer[1024] = {0};
+
+    if(argc < 3){
+    {
+        printf("\nNot Enough arguments\n");
+        return -1;
+    }
+    }
+
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
         printf("\n Socket creation error \n");
         return -1;
     }
 
+    port = atoi(argv[2]);
+
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
+    serv_addr.sin_addr.s_addr = inet_addr(argv[1]);
+    serv_addr.sin_port = htons(port);
 
     // Convert IPv4 and IPv6 addresses from text to binary
     // form
@@ -75,6 +100,8 @@ int main(int argc, char const *argv[])
             "\nInvalid address/ Address not supported \n");
         return -1;
     }
+
+    signal(SIGINT, signal_handler);
 
     while (1)
     {
@@ -117,6 +144,7 @@ int main(int argc, char const *argv[])
 
                     send(sock, request_string.c_str(), strlen(request_string.c_str()), 0);
 
+                    memset(buffer, '\0', sizeof(buffer));
                     valread = read(sock, buffer, 1024);
 
                     cout << "\nResponse from server: " << buffer << "\n";

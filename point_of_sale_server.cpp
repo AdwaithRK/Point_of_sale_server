@@ -184,7 +184,15 @@ void serviceRequest(int new_socket)
         memset(buffer, '\0', sizeof(buffer));
         valread = read(new_socket, buffer, 30000);
         cout << "\n-----------------Request--------------------\n";
-        // printf("\n content in buffer is : %s\n", buffer);
+
+        // if the client is terminated the child process is terminated along with it
+        if (strcmp(buffer, "-256") == 0)
+        {
+            printf("\nChild Process  terminated abnormally!..\n");
+            close(new_socket);
+            exit(0);
+        }
+
         if (buffer[0] == '0')
         {
             product_code = getProductCode(buffer);
@@ -243,8 +251,10 @@ int main(int argc, char const *argv[])
 
     string content = "";
 
-    if(argc < 2){
-        printf("Not enough arguments");
+    if (argc < 2)
+    {
+        cout << "Not enough arguments";
+        exit(0);
     }
 
     port = atoi(argv[1]);

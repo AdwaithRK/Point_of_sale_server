@@ -44,7 +44,7 @@ int main(int argc, char const *argv[])
     // Creating socket file descriptor
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
-        printf("\n Socket creation error \n");
+        cout << "\nSocket creation error \n";
         return -1;
     }
 
@@ -69,11 +69,11 @@ int main(int argc, char const *argv[])
             if ((client_fd = connect(sock, (struct sockaddr *)&serv_addr,
                                      sizeof(serv_addr))) < 0)
             {
-                printf("\nConnection Failed \n");
+                cout << "\nConnection Failed \n";
                 return -1;
             }
 
-            printf("\nConnected with the server!! b");
+            cout << "\nConnected with the server!!\n";
 
             while (1)
             {
@@ -94,18 +94,26 @@ int main(int argc, char const *argv[])
 
                     string request_string = to_string(request_type) + " " + to_string(upc_code) + " " + to_string(number_of_items);
 
-                    send(sock, request_string.c_str(), strlen(request_string.c_str()), 0);
+                    write(sock, request_string.c_str(), strlen(request_string.c_str()));
 
                     memset(buffer, '\0', sizeof(buffer));
                     valread = read(sock, buffer, 1024);
 
                     cout << "\nResponse from server: " << buffer << "\n";
+
+                    if (buffer[0] == '2')
+                    {
+                        cout << "\nSeems like server is down!!!\n";
+                        cout << "\nClosing down the connection......\n";
+                        input_response = 0;
+                        break;
+                    }
                 }
                 // close connection
                 if (request_type == 1)
                 {
                     cout << "\nSending close request to the server!! \n";
-                    send(sock, "1", 1, 0);
+                    write(sock, "1", 1);
                     memset(buffer, '\0', sizeof(buffer));
                     read(sock, buffer, 1024);
 

@@ -178,7 +178,7 @@ vector<int> cacheValidProductId()
 // handles client request
 void serviceRequest(int new_socket)
 {
-    float total_price = 0;
+    int total_price = 0;
     vector<int> cached_valid_ids = cacheValidProductId();
     long valread;
 
@@ -244,10 +244,10 @@ void signal_handler(int sig)
     char msg[100];
 
     close(server_fd);
-    fputs("\nServer terminating!..", stdout);
+    cout << "\nServer terminating! process id :" << getpid() << "\n";
 
-    sprintf(msg, "0 Server terminated!\n");
-    send(new_socket, msg, 100, 0);
+    sprintf(msg, "2 Server terminated!\n");
+    write(new_socket, msg, 100);
 
     exit(0);
 }
@@ -275,6 +275,20 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
 
+    /*
+    Forceful attachment to port is not recommended, can be used in worst case
+    int opt = 1;
+    // Forcefully attaching socket to the port 8080
+    if (setsockopt(server_fd, SOL_SOCKET,
+                   SO_REUSEADDR | SO_REUSEPORT, &opt,
+                   sizeof(opt)))
+    {
+        perror("setsockopt");
+        exit(EXIT_FAILURE);
+    }
+
+    */
+
     // info of type of socket to be created
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
@@ -300,7 +314,7 @@ int main(int argc, char const *argv[])
 
     while (1)
     {
-        printf("\n+++++++ Waiting for new connection ++++++++\n\n");
+        cout << "\n+++++++ Waiting for new connection ++++++++\n\n";
         if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0)
         {
             perror("In accept");
@@ -312,7 +326,7 @@ int main(int argc, char const *argv[])
             // handling multiple clients
             if ((childpid = fork()) == 0)
             {
-                printf("\nRequest Serviced with child process %d\n", getpid());
+                cout << "\nRequest Serviced with child process " << getpid() << "\n";
                 serviceRequest(new_socket);
                 close(new_socket); // close the socket
                 cout << "\nChild process " << getpid() << " is exiting\n";

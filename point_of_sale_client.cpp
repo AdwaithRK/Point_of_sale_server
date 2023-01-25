@@ -26,51 +26,10 @@ void signal_handler(int sig){
 
 int main(int argc, char const *argv[])
 {
-    // int sock = 0, valread, client_fd;
-    // struct sockaddr_in serv_addr;
-    // char *hello = "Hello from client";
-    // char buffer[1024] = {0};
-    // if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-    // {
-    //     printf("\n Socket creation error \n");
-    //     return -1;
-    // }
-
-    // serv_addr.sin_family = AF_INET;
-    // serv_addr.sin_port = htons(PORT);
-
-    // // Convert IPv4 and IPv6 addresses from text to binary
-    // // form
-    // if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0)
-    // {
-    //     printf(
-    //         "\nInvalid address/ Address not supported \n");
-    //     return -1;
-    // }
-
-    // if ((client_fd = connect(sock, (struct sockaddr *)&serv_addr,
-    //                          sizeof(serv_addr))) < 0)
-    // {
-    //     printf("\nConnection Failed \n");
-    //     return -1;
-    // }
-
-    // printf("\nConnected with the server!!");
-
-    // send(sock, hello, strlen(hello), 0);
-    // printf("Hello message sent\n");
-    // valread = read(sock, buffer, 1024);
-    // printf("%s\n", buffer);
-
-    // closing the connected socket
-    //  close(client_fd);
-    // return 0;
-
     int input_response;
 
     int valread, client_fd, port;
     struct sockaddr_in serv_addr;
-    // char *hello = "Hello from client";
     char buffer[1024] = {0};
 
     if(argc < 3){
@@ -80,14 +39,15 @@ int main(int argc, char const *argv[])
     }
     }
 
+    // Creating socket file descriptor
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
         printf("\n Socket creation error \n");
         return -1;
     }
 
+    // info of type of socket to be created
     port = atoi(argv[2]);
-
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = inet_addr(argv[1]);
     serv_addr.sin_port = htons(port);
@@ -104,7 +64,7 @@ int main(int argc, char const *argv[])
 
         if (input_response == 1)
         {
-
+            // connection with the server
             if ((client_fd = connect(sock, (struct sockaddr *)&serv_addr,
                                      sizeof(serv_addr))) < 0)
             {
@@ -116,14 +76,13 @@ int main(int argc, char const *argv[])
 
             while (1)
             {
-                // cout << "\nblah blah... \n";
                 int request_type = 1;
                 int number_of_items;
                 int upc_code;
                 cout << "\nAdd an item(0) or close(1)\n";
 
                 cin >> request_type;
-
+                //enter new items
                 if (request_type == 0)
                 {
                     cout << "\n Enter UPC code of the item to be added \n";
@@ -141,12 +100,12 @@ int main(int argc, char const *argv[])
 
                     cout << "\nResponse from server: " << buffer << "\n";
                 }
-
+                //close connection
                 if (request_type == 1)
                 {
                     cout << "\n Sending close request to the server!! \n";
                     send(sock, "1", 1, 0);
-
+                    memset(buffer, '\0', sizeof(buffer));
                     read(sock, buffer, 1024);
 
                     cout << "\nResponse from server: " << buffer << "\n";

@@ -11,11 +11,11 @@
 #include <fstream>
 #include <sstream>
 #include <bits/stdc++.h>
-using namespace std;
 #define PRICE_LIST "product_price.txt"
 
 using namespace std;
 
+// Extracts product code from the buffer
 int getProductCode(char *buffer)
 {
     istringstream ss(buffer);
@@ -29,6 +29,7 @@ int getProductCode(char *buffer)
     return stoi(product_id);
 }
 
+//Extracts product quantity from the buffer
 int getProductQuantity(char *buffer)
 {
     istringstream ss(buffer);
@@ -42,6 +43,7 @@ int getProductQuantity(char *buffer)
     return stoi(product_quantity);
 }
 
+// Returns the price of the products
 int checkPrice(char *price_line, int product_code)
 {
     istringstream ss(price_line);
@@ -66,6 +68,7 @@ int checkPrice(char *price_line, int product_code)
     return -1;
 }
 
+// Returns the price of the products
 int getProductPrice(int product_code)
 {
     ifstream file;
@@ -169,6 +172,7 @@ vector<int> cacheValidProductId()
     return cachedPriceList;
 }
 
+// handles client request
 void serviceRequest(int new_socket)
 {
     float total_price = 0;
@@ -192,11 +196,12 @@ void serviceRequest(int new_socket)
             close(new_socket);
             exit(0);
         }
-
+        // if request is of type 0 implies item
         if (buffer[0] == '0')
         {
             product_code = getProductCode(buffer);
             product_quantity = getProductQuantity(buffer);
+            // Check if product code exists or not
             if (find(cached_valid_ids.begin(), cached_valid_ids.end(), product_code) == cached_valid_ids.end())
             {
                 content = "1 product_code: " + to_string(product_price) + " NOT_FOUND!!";
@@ -215,7 +220,7 @@ void serviceRequest(int new_socket)
             }
             // extraction from client message is done
         }
-
+        // if request is of type 1 then close connection
         if (buffer[0] == '1')
         {
             content = "0 total price: " + to_string(total_price);
@@ -230,6 +235,7 @@ void serviceRequest(int new_socket)
 
 int server_fd, new_socket;
 
+// Handles when server terminates abruptly
 void signal_handler(int sig)
 {
     char msg[100];
@@ -266,18 +272,21 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
 
+    // info of type of socket to be created
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(port);
 
     memset(address.sin_zero, '\0', sizeof address.sin_zero);
 
+    //binds the socket to localhost port
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
     {
         perror("In bind");
         exit(EXIT_FAILURE);
     }
 
+    //starts to listen on specified port and sets max number of clients to process
     if (listen(server_fd, 10) < 0)
     {
         perror("In listen");
@@ -297,11 +306,12 @@ int main(int argc, char const *argv[])
         else
         {
             int childpid;
+            //handling multiple clients
             if ((childpid = fork()) == 0)
             {
                 printf("\nRequest Serviced with child process %d\n", getpid());
                 serviceRequest(new_socket);
-                close(new_socket); //
+                close(new_socket); // close the socket
                 printf("\nChild process %d is exiting\n", getpid());
                 exit(0); // child exiting after servicing the request
             }

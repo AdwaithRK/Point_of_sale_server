@@ -13,7 +13,8 @@ using namespace std;
 
 int sock;
 
-void signal_handler(int sig){
+void signal_handler(int sig)
+{
     char msg[100];
 
     fputs("\nClient terminating!..", stdout);
@@ -32,11 +33,12 @@ int main(int argc, char const *argv[])
     struct sockaddr_in serv_addr;
     char buffer[1024] = {0};
 
-    if(argc < 3){
+    if (argc < 3)
     {
-        printf("\nNot Enough arguments\n");
-        return -1;
-    }
+        {
+            printf("\nNot Enough arguments\n");
+            return -1;
+        }
     }
 
     // Creating socket file descriptor
@@ -52,13 +54,12 @@ int main(int argc, char const *argv[])
     serv_addr.sin_addr.s_addr = inet_addr(argv[1]);
     serv_addr.sin_port = htons(port);
 
-
     signal(SIGINT, signal_handler);
 
     while (1)
     {
 
-        cout << "\n Press 1 to open session with server or 0 to exit the program \n";
+        cout << "\nPress 1 to open session with server or 0 to exit the program \n";
 
         cin >> input_response;
 
@@ -82,13 +83,13 @@ int main(int argc, char const *argv[])
                 cout << "\nAdd an item(0) or close(1)\n";
 
                 cin >> request_type;
-                //enter new items
+                // enter new items
                 if (request_type == 0)
                 {
-                    cout << "\n Enter UPC code of the item to be added \n";
+                    cout << "\nEnter UPC code of the item to be added \n";
                     cin >> upc_code;
 
-                    cout << "\n Enter number of items to be added \n";
+                    cout << "\nEnter number of items to be added \n";
                     cin >> number_of_items;
 
                     string request_string = to_string(request_type) + " " + to_string(upc_code) + " " + to_string(number_of_items);
@@ -100,15 +101,19 @@ int main(int argc, char const *argv[])
 
                     cout << "\nResponse from server: " << buffer << "\n";
                 }
-                //close connection
+                // close connection
                 if (request_type == 1)
                 {
-                    cout << "\n Sending close request to the server!! \n";
+                    cout << "\nSending close request to the server!! \n";
                     send(sock, "1", 1, 0);
                     memset(buffer, '\0', sizeof(buffer));
                     read(sock, buffer, 1024);
 
                     cout << "\nResponse from server: " << buffer << "\n";
+
+                    cout << "\nThanks\n";
+
+                    input_response = 0; // setting input response as the client is closing
 
                     break;
                 }

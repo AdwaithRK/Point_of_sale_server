@@ -29,7 +29,7 @@ int getProductCode(char *buffer)
     return stoi(product_id);
 }
 
-//Extracts product quantity from the buffer
+// Extracts product quantity from the buffer
 int getProductQuantity(char *buffer)
 {
     istringstream ss(buffer);
@@ -97,6 +97,7 @@ int getProductPrice(int product_code)
     return 0;
 }
 
+// Extracts name from the string
 string checkName(string line, int product_code)
 {
     istringstream ss(line);
@@ -120,6 +121,7 @@ string checkName(string line, int product_code)
     return "\0";
 }
 
+// Getting name of the product from the file
 string getProductName(int product_code)
 {
     ifstream file;
@@ -144,6 +146,7 @@ string getProductName(int product_code)
     return 0;
 }
 
+// Caching product Id's for fast lookup
 vector<int> cacheValidProductId()
 {
     ifstream file;
@@ -279,14 +282,14 @@ int main(int argc, char const *argv[])
 
     memset(address.sin_zero, '\0', sizeof address.sin_zero);
 
-    //binds the socket to localhost port
+    // binds the socket to localhost port
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
     {
         perror("In bind");
         exit(EXIT_FAILURE);
     }
 
-    //starts to listen on specified port and sets max number of clients to process
+    // starts to listen on specified port and sets max number of clients to process
     if (listen(server_fd, 10) < 0)
     {
         perror("In listen");
@@ -306,13 +309,13 @@ int main(int argc, char const *argv[])
         else
         {
             int childpid;
-            //handling multiple clients
+            // handling multiple clients
             if ((childpid = fork()) == 0)
             {
                 printf("\nRequest Serviced with child process %d\n", getpid());
                 serviceRequest(new_socket);
                 close(new_socket); // close the socket
-                printf("\nChild process %d is exiting\n", getpid());
+                cout << "\nChild process " << getpid() << " is exiting\n";
                 exit(0); // child exiting after servicing the request
             }
         }
